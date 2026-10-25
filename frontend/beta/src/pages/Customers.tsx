@@ -3,6 +3,7 @@ import axios from "axios";
 import CustomerForm from "../components/customers/CustomerForm";
 import { getCustomers } from "../services/customerService";
 import type { Customer } from "../types/api";
+import CustomerTransactions from "../components/customers/CustomerTransactions";
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -10,6 +11,9 @@ export default function Customers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
 
   const loadCustomers = useCallback(async () => {
     try {
@@ -174,9 +178,12 @@ export default function Customers() {
                 <table className="w-full text-left text-sm">
                   <thead className="border-b border-neutral-200 bg-neutral-50 text-neutral-500">
                     <tr>
-                      <th className="px-6 py-4 font-medium">Name</th>
-                      <th className="px-6 py-4 font-medium">Phone</th>
-                      <th className="px-6 py-4 font-medium">Address</th>
+                      <th className="px-6 py-2 font-medium">Name</th>
+                      <th className="px-6 py-2 font-medium">Phone</th>
+                      <th className="px-6 py-2 font-medium">Address</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
 
@@ -186,16 +193,27 @@ export default function Customers() {
                         key={customer.customerId}
                         className="transition hover:bg-neutral-50"
                       >
-                        <td className="px-6 py-4 font-medium text-neutral-900">
+                        <td className="px-6 py-2 font-medium text-neutral-900">
                           {customer.name}
                         </td>
 
-                        <td className="px-6 py-4 text-neutral-600">
+                        <td className="px-6 py-2 text-neutral-600">
                           {customer.phone}
                         </td>
 
-                        <td className="px-6 py-4 text-neutral-600">
+                        <td className="px-6 py-2 text-neutral-600">
                           {customer.address || "—"}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCustomer(customer)}
+                            className="rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                          >
+                            View history
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -213,16 +231,21 @@ export default function Customers() {
                     <h3 className="font-semibold text-neutral-900">
                       {customer.name}
                     </h3>
-
-                    <p className="mt-2 text-sm text-neutral-600">
+                    <p className="mt-1 text-sm text-neutral-600">
                       {customer.phone}
                     </p>
-
                     {customer.address && (
                       <p className="mt-1 text-sm text-neutral-500">
                         {customer.address}
                       </p>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCustomer(customer)}
+                      className="mt-3 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                    >
+                      View history
+                    </button>
                   </article>
                 ))}
               </div>
@@ -237,6 +260,12 @@ export default function Customers() {
             setShowAddForm(false);
             void loadCustomers();
           }}
+        />
+      )}
+      {selectedCustomer && (
+        <CustomerTransactions
+          customer={selectedCustomer}
+          onClose={() => setSelectedCustomer(null)}
         />
       )}
     </main>
