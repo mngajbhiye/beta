@@ -8,7 +8,7 @@ class CustomerRepository:
 
     async def getAll(self):
         """Fetches customers from Firestore."""
-        customers_ref = db.collection("customers").stream()
+        customers_ref = self.collection.stream()
 
         customers = []
 
@@ -20,13 +20,27 @@ class CustomerRepository:
 
         return customers
 
-    async def create(self, customer: Customer):
-        """Create a new customer in Firestore."""
-        doc_ref = db.collection("customers").document()
 
-        await doc_ref.set(customer.model_dump())
+    async def get(self, customer: Customer) -> dict:
+        """Returns the existing customer ID or creates a new customer and returns its ID."""
+
+        query = (
+            self.collection
+            .where("name", "==", customer.name)
+            .where("phone", "==", customer.phone)
+        )
+
+        docs = await query.get()
+
+        for doc in docs:
+            return {"customerId": doc.id}
+
+        _, doc_ref = await self.collection.add(customer.model_dump())
 
         return {
             "customerId": doc_ref.id,
             **customer.model_dump()
         }
+
+
+
