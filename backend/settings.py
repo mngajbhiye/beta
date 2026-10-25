@@ -1,0 +1,5 @@
+TRANSACTIONS_COLL = "transactions_test"
+TRANSACTIONS_ITEMS_COLL = "transactions_test"
+PRODUCTS_COLL = "products_test"
+CUSTOMERS_COLL = "transactions_test"
+PAYMENTS_COLL = "payments_test"

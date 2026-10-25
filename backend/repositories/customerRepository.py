@@ -2,10 +2,12 @@ from firebase import db
 from models import Customer
 from google.cloud.firestore_v1.base_query import FieldFilter
 
+from settings import CUSTOMERS_COLL
+
 
 class CustomerRepository:
     def __init__(self):
-        self.collection = db.collection("customers")
+        self.collection = db.collection(CUSTOMERS_COLL)
 
     async def getAll(self):
         """Fetches customers from Firestore."""

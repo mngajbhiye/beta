@@ -1,14 +1,15 @@
 from firebase import db
 from models import Product
+from settings import PRODUCTS_COLL
 
 
 class ProductRepository:
     def __init__(self):
-        self.collection = db.collection("products")
+        self.collection = db.collection(PRODUCTS_COLL)
 
     async def getAll(self):
         """Fetches products in Firestore."""
-        products_ref = db.collection("products").stream()
+        products_ref = self.collection.stream()
 
         products = []
 
