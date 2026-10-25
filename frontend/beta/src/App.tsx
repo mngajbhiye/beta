@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
 import Home from "./pages/Home";
+import Customers from "./pages/Customers";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         brandName="Beta"
         navLinks={[
           { name: "Home", href: "/" },
+          { name: "Customers", href: "/customers" },
           { name: "Products", href: "/products" },
           { name: "Sale", href: "/sale" },
           { name: "Purchase", href: "/purchase" },
@@ -25,6 +27,7 @@ function App() {
       {/* Page content changes according to the URL */}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/customers" element={<Customers />} />
 
         {/* Catch unmatched URLs */}
         <Route path="*" element={<NotFound />} />
