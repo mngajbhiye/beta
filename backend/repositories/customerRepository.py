@@ -17,7 +17,7 @@ class CustomerRepository:
 
         async for doc in customers_ref:
             customers.append({
-                "productId": doc.id,
+                "customerId": doc.id,
                 **doc.to_dict()
             })
 
