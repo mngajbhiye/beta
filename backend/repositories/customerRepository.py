@@ -1,5 +1,6 @@
 from firebase import db
 from models import Customer
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 
 class CustomerRepository:
@@ -20,14 +21,14 @@ class CustomerRepository:
 
         return customers
 
-
     async def get(self, customer: Customer) -> dict:
         """Returns the existing customer ID or creates a new customer and returns its ID."""
 
         query = (
             self.collection
             .where("name", "==", customer.name)
-            .where("phone", "==", customer.phone)
+            .where(filter=FieldFilter("phone", "==", customer.phone))
+            .limit(1)
         )
 
         docs = await query.get()
@@ -41,6 +42,3 @@ class CustomerRepository:
             "customerId": doc_ref.id,
             **customer.model_dump()
         }
-
-
-
