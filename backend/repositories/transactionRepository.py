@@ -1,12 +1,11 @@
-from models import TransactionReturnCreate
-from settings import TRANSACTIONS_COLL, PRODUCTS_COLL, TRANSACTIONS_ITEMS_COLL, CUSTOMERS_COLL
 from settings import (
     TRANSACTIONS_COLL,
     PRODUCTS_COLL,
     TRANSACTIONS_ITEMS_COLL,
+    CUSTOMERS_COLL
 )
 from repositories.customerRepository import CustomerRepository
-from models import TransactionCreate, Transaction, Customer
+from models import TransactionCreate, Transaction, Customer, TransactionReturnCreate, Payment
 from firebase import db
 from fastapi import HTTPException
 from datetime import datetime, timezone
@@ -31,7 +30,7 @@ class TransactionRepository:
                 **doc.to_dict(),
             })
 
-        return transactions
+        return {"transactions": transactions}
 
     async def create(self, payload: TransactionCreate) -> dict:
         """Create a transaction and its items atomically."""
@@ -116,7 +115,8 @@ class TransactionRepository:
             customerId=customer_id,
             type=payload.type,
             totalAmount=total_amount,
-            status=payload.status,
+            status="completed" if payload.amtExchanged >= total_amount else "pending",
+            amtExchanged=payload.amtExchanged
         )
 
         transaction_data = transaction.model_dump(mode="python")
@@ -154,7 +154,6 @@ class TransactionRepository:
             "dateTime": transaction_data["dateTime"].isoformat(),
             "items": saved_items,
         }
-
 
     async def delete(self, transaction_id: str) -> dict:
         """Delete a transaction and all its associated items."""
@@ -230,12 +229,12 @@ class TransactionRepository:
 
         return transactions
 
-
     async def return_item(self, payload: TransactionReturnCreate) -> dict:
         """Create a return transaction and update product stock."""
 
         # Verify customer exists
-        customer_ref = db.collection(CUSTOMERS_COLL).document(payload.customerId)
+        customer_ref = db.collection(
+            CUSTOMERS_COLL).document(payload.customerId)
         customer_doc = await customer_ref.get()
 
         if not customer_doc.exists:
@@ -290,7 +289,8 @@ class TransactionRepository:
             # Add returned quantity back to stock
             batch.update(
                 product_ref,
-                {"stockQuantity": product.get("stockQuantity", 0) + item.quantity}
+                {"stockQuantity": product.get(
+                    "stockQuantity", 0) + item.quantity}
             )
 
             returned_items.append({
@@ -305,6 +305,7 @@ class TransactionRepository:
             "status": "completed",
             "dateTime": datetime.now(timezone.utc),
             "reason": payload.reason,
+            "amtExchange": payload.amtExchanged
         }
 
         batch.set(transaction_ref, transaction_data)
@@ -317,4 +318,41 @@ class TransactionRepository:
                 "dateTime": transaction_data["dateTime"].isoformat(),
             },
             "items": returned_items,
+        }
+
+    async def create_payment(self, payload: Payment) -> dict:
+        """Record a payment as a transaction."""
+
+        # Verify customer exists
+        customer_ref = db.collection(
+            CUSTOMERS_COLL).document(payload.customerId)
+        customer_doc = await customer_ref.get()
+
+        if not customer_doc.exists:
+            raise HTTPException(
+                status_code=404,
+                detail="Customer not found.",
+            )
+
+        # Create payment transaction
+        transaction_ref = self.collection.document()
+
+        transaction_data = {
+            "customerId": payload.customerId,
+            "type": "payment",
+            "amtExhanged": payload.amount,
+            "direction": payload.direction,
+            "method": payload.method,
+            "status": "completed",
+            "dateTime": payload.dateTime,
+        }
+
+        await transaction_ref.set(transaction_data)
+
+        return {
+            "transactionId": transaction_ref.id,
+            **{
+                **transaction_data,
+                "dateTime": transaction_data["dateTime"].isoformat(),
+            },
         }
