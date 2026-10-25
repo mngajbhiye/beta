@@ -1,9 +1,14 @@
+import { Route, Routes } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
-import "./App.css";
+
+import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <div className="min-h-screen bg-white">
+      {/* Shared across all pages */}
       <Navbar
         brandName="Beta"
         navLinks={[
@@ -17,13 +22,13 @@ function App() {
         signupHref="/signup"
       />
 
-      <main className="mx-auto max-w-7xl px-5 py-16">
-        <h1 className="text-4xl font-bold text-[#0A0A0A]">
-          Welcome to Beta
-        </h1>
+      {/* Page content changes according to the URL */}
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-        <p className="mt-4 text-[#525252]">Discover our products.</p>
-      </main>
+        {/* Catch unmatched URLs */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </div>
   );
 }
