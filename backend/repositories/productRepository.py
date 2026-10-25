@@ -22,9 +22,8 @@ class ProductRepository:
 
     async def create(self, product: Product):
         """Create a new product in Firestore."""
-        doc_ref = db.collection("products").document()
 
-        await doc_ref.set(product.model_dump())
+        _, doc_ref = await self.collection.add(product.model_dump())
 
         return {
             "productId": doc_ref.id,
