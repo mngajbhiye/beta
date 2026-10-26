@@ -56,17 +56,25 @@ function getTransactionLabel(type: TransactionType): string {
       return "Return";
     case "payment":
       return "Payment";
+    case "purchase":
+      return "Purchase";
+    default:
+      return "Transaction";
   }
 }
 
 function getAmountStyle(type: TransactionType): string {
   switch (type) {
     case "sale":
-      return "text-neutral-900";
+      return "text-green-700";
     case "return":
-      return "text-amber-700";
+      return "text-orange-700";
     case "payment":
-      return "text-emerald-700";
+      return "text-blue-700";
+    case "purchase":
+      return "text-purple-700";
+    default:
+      return "text-neutral-700";
   }
 }
 
@@ -88,14 +96,22 @@ function getTransactionDescription(transaction: CustomerTransaction): string {
   switch (transaction.type) {
     case "sale":
       return "Products purchased";
+
     case "return":
       return transaction.reason || "Returned products";
+
     case "payment":
       return (
         [transaction.method?.toUpperCase(), transaction.direction]
           .filter(Boolean)
           .join(" · ") || "Customer payment"
       );
+
+    case "purchase":
+      return "Products purchased for stock";
+
+    default:
+      return "Transaction";
   }
 }
 
@@ -154,7 +170,6 @@ export default function CustomerTransactions({
       cancelled = true;
     };
   }, [customer.customerId]);
-
 
   const getAmountExchanged = (transaction: CustomerTransaction) =>
     transaction.amtExchanged ?? 0;
@@ -331,10 +346,10 @@ export default function CustomerTransactions({
                       </p>
                     </div>
 
-                    {transaction.items?.length > 0 && (
+                    {(transaction.items?.length ?? 0) > 0 && (
                       <div className="mt-3 border-t border-neutral-100 pt-3">
                         <div className="space-y-2">
-                          {transaction.items.map((item) => (
+                          {transaction.items?.map((item) => (
                             <div
                               key={item.itemId}
                               className="flex items-start justify-between gap-3 text-sm"
@@ -351,7 +366,10 @@ export default function CustomerTransactions({
                               </div>
 
                               <span className="shrink-0 text-neutral-700">
-                                {formatAmount(item.subtotal)}
+                                {formatAmount(
+                                  item.subtotal ??
+                                    item.quantity * item.unitPrice,
+                                )}
                               </span>
                             </div>
                           ))}
@@ -400,23 +418,6 @@ export default function CustomerTransactions({
           </button>
         </footer>
       </section>
-    </div>
-  );
-}
-
-interface SummaryCardProps {
-  label: string;
-  amount: number;
-  amountClass: string;
-}
-
-function SummaryCard({ label, amount, amountClass }: SummaryCardProps) {
-  return (
-    <div className="rounded-md border border-neutral-200 bg-white px-3 py-2.5">
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className={`mt-1 text-base font-semibold ${amountClass}`}>
-        {formatAmount(amount)}
-      </p>
     </div>
   );
 }
