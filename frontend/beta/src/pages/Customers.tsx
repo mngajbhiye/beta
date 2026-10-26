@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import CustomerForm from "../components/customers/CustomerForm";
+import CustomerForm from "../components/customers/CustomerForms";
 import CustomerTransactions from "../components/customers/CustomerTransactions";
 import { getCustomers } from "../services/customerService";
 import { getTransactions } from "../services/transactionService";
