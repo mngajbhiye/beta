@@ -36,13 +36,14 @@ class TransactionRepository:
         """Create a transaction and its items atomically."""
 
         # Stage 1: Retrieve customer details.
-        customer_payload = Customer(
-            name=payload.customerName,
-            phone=payload.phone,
-        )
+        # customer_payload = Customer(
+        #     name=payload.customerName,
+        #     phone=payload.phone,
+        # )
 
-        customer_detail = await customerRepo.get(customer_payload)
-        customer_id = customer_detail["customerId"]
+        # customer_detail = await customerRepo.get(customer_payload)
+        # customer_id = customer_detail["customerId"]
+        customer_id = payload.customerId
 
         # Stage 2: Fetch each unique product once.
         product_ids = {item.productId for item in payload.items}
@@ -77,6 +78,7 @@ class TransactionRepository:
         )
 
         transaction_items = []
+        stock_changes = {}
         total_amount = 0.0
 
         for item in payload.items:
@@ -99,6 +101,12 @@ class TransactionRepository:
 
             subtotal = round(unit_price * item.quantity, 2)
             total_amount += subtotal
+            quantity_change = (
+                -item.quantity if payload.type == "sale" else item.quantity
+            )
+            stock_changes[item.productId] = (
+                stock_changes.get(item.productId, 0) + quantity_change
+            )
 
             transaction_items.append({
                 "productId": item.productId,
@@ -143,6 +151,24 @@ class TransactionRepository:
                 "itemId": item_ref.id,
                 **stored_item,
             })
+
+        for product_id, quantity_change in stock_changes.items():
+            product = product_cache[product_id]
+            updated_stock = (
+                product.get("stockQuantity", 0) + quantity_change
+            )
+
+            if updated_stock < 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Insufficient stock for product '{product_id}'.",
+                )
+
+            product_ref = db.collection(PRODUCTS_COLL).document(product_id)
+            batch.update(
+                product_ref,
+                {"stockQuantity": updated_stock},
+            )
 
         # Stage 6: Commit the transaction and items atomically.
         await batch.commit()
@@ -340,7 +366,7 @@ class TransactionRepository:
         transaction_data = {
             "customerId": payload.customerId,
             "type": "payment",
-            "amtExhanged": payload.amount,
+            "amtExchanged": payload.amount,
             "direction": payload.direction,
             "method": payload.method,
             "status": "completed",

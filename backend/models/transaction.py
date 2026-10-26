@@ -25,8 +25,10 @@ class TransactionItemInput(BaseModel):
 
 
 class TransactionCreate(BaseModel):
-    customerName: str = Field(min_length=1, max_length=100)
-    phone: str = Field(min_length=1, max_length=20)
+    # customerName: str = Field(min_length=1, max_length=100)
+    # phone: str = Field(min_length=1, max_length=20)
+    customerId: str = Field(min_length=1)
+
 
     type: Literal["sale", "purchase", "return"]
     amtExchanged: float = Field(default=0, ge=0)

@@ -5,8 +5,22 @@ from models import Product, Customer, TransactionCreate, TransactionReturnCreate
 from repositories.productRepository import ProductRepository
 from repositories.customerRepository import CustomerRepository
 from repositories.transactionRepository import TransactionRepository
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 product_repo = ProductRepository()
 customer_repo = CustomerRepository()
@@ -34,7 +48,7 @@ async def getProducts() -> dict:
     return {"products": await product_repo.getAll()}
 
 
-@app.get("/customer",
+@app.post("/customer",
          summary="Creates a customer",
          description="Creates a new customer in Firestore and returns its details along with the generated ID.",
          response_description="The newly created customer and its ID")
