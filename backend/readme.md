@@ -1,4 +1,5 @@
 mongodb+srv://projectsmohitgajbhiye9_db_user:f73eBUeecBVbNejD@cluster-beta.eycmyef.mongodb.net/
+the above uri has been revoked
 
 CREATE DATABASE inventory_db;
 
